@@ -5,6 +5,7 @@ import sys
 import datetime
 import os
 import signal
+import json
 
 def keyboardInterruptHandler(signal, frame):
     print("KeyboardInterrupt (ID: {}) has been caught. Cleaning up...".format(signal))
@@ -66,10 +67,12 @@ def runExample():
                 # We sensed a beat!
                 beatFlag = True
                 now = datetime.datetime.now()
+                # now = time.ctime()
                 print('[' + str(now) +']' + ' SENSED A BEAT')
             else:
                 beatFlag = False
                 now = datetime.datetime.now()
+                # now = time.ctime()
                 print('[' + str(now) +']' + ' NO FINGER DETECTED')
                 
             delta = ( millis() - lastBeat )
@@ -91,7 +94,7 @@ def runExample():
                 beatAvg = round(beatAvg)
         
         Hz = round(float(samplesTaken) / ( ( millis() - startTime ) / 1000.0 ) , 2)
-        if ((samplesTaken % 200 ) == 0 and beatFlag == True):
+        if ((samplesTaken % 20 ) == 0 and beatFlag == True): # originally - if ((samplesTaken % 20 ) == 0 and beatFlag == True):
             now = datetime.datetime.now()
             print(\
                     '[' + str(now) +']',\
@@ -101,8 +104,15 @@ def runExample():
                     'Avg=', beatAvg , '\t',\
                     'Hz=', Hz, \
                 )
-            with open(os.path.join(new_file_path, 'hblog.txt'), 'a') as f:
-                f.write("BPM: "+ str(beatsPerMinute)+ " " + "Avg:"+ str(beatAvg) +"\n")
+            data = {}
+            # now = datetime.datetime.now()
+            data['Time'] = str(now)
+            data ['BPM'] = beatsPerMinute
+            json_data = json.dumps(data)
+            with open(os.path.join(new_file_path, 'hblog.json'), 'a') as f:
+                json.dump(data,f)
+                f.write("\n")
+                # f.write("BPM: "+ str(beatsPerMinute)+ " " + "Avg:"+ str(beatAvg) +"\n")
         '''try:
             time.sleep(30)
         except KeyboardInterrupt:
