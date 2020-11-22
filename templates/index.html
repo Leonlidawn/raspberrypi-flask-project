@@ -9,10 +9,33 @@
 <body>
 <div class="container">
     <div class="row">
-        <div class="col-12">
+        <div class="col-6">
             <div class="card">
                 <div class="card-body">
-                    <canvas id="canvas"></canvas>
+                    <canvas id="canvas1"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-6">
+            <div class="card">
+                <div class="card-body">
+                    <canvas id="canvas2"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-6">
+            <div class="card">
+                <div class="card-body">
+                    <canvas id="canvas3"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-6">
+            <div class="card">
+                <div class="card-body">
+                    <canvas id="canvas4"></canvas>
                 </div>
             </div>
         </div>
@@ -29,11 +52,11 @@
 <script>
     $(document).ready(function () {
         const hrConfig = {lineColor:'red'};
-        
 
-        const config = {
+        let config = {
             type: 'line',
             data: {
+                pointRadius:0,
                 labels: [],
                 datasets: [{
                     label: "Heart Rate",
@@ -47,7 +70,7 @@
                 responsive: true,
                 title: {
                     display: true,
-                    text: 'Realtime Patient Status'
+                    text: 'Heart Rate'
                 },
                 tooltips: {
                     mode: 'index',
@@ -76,7 +99,7 @@
             }
         };
 
-        const context = document.getElementById('canvas').getContext('2d');
+        const context = document.getElementById('canvas1').getContext('2d');
 
         const lineChart = new Chart(context, config);
 
@@ -84,15 +107,225 @@
 
         source.onmessage = function (event) {
             const data = JSON.parse(event.data);
-            if (config.data.labels.length === 20) {
+            if (config.data.labels.length === 200) {
                 config.data.labels.shift();
                 config.data.datasets[0].data.shift();
             }
             config.data.labels.push(data.time);
             config.data.datasets[0].data.push(data.value);
+            config.data.datasets[0].label='Heart Rate    Current Heart rate: '+data.value ;
+            lineChart.update();
+        }
+    });
+
+
+
+
+    $(document).ready(function () {
+        const hrConfig = {lineColor:'#bf00ff'};
+
+        let config = {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: "Heart Rate",
+                    backgroundColor: hrConfig.lineColor,
+                    borderColor: hrConfig.lineColor,
+                    data: [],
+                    fill: false,
+                }],
+            },
+            options: {
+                responsive: true,
+                title: {
+                    display: true,
+                    text: 'Heart Rate'
+                },
+                tooltips: {
+                    mode: 'index',
+                    intersect: false,
+                },
+                hover: {
+                    mode: 'nearest',
+                    intersect: false
+                },
+                scales: {
+                    xAxes: [{
+                        display: true,
+                        scaleLabel: {
+                            display: true,
+                            labelString: 'Time'
+                        }
+                    }],
+                    yAxes: [{
+                        display: true,
+                        scaleLabel: {
+                            display: true,
+                            labelString: 'Value'
+                        }
+                    }]
+                }
+            }
+        };
+
+        const context = document.getElementById('canvas2').getContext('2d');
+
+        const lineChart = new Chart(context, config);
+
+        const source = new EventSource("/chart-data");
+
+        source.onmessage = function (event) {
+            const data = JSON.parse(event.data);
+            if (config.data.labels.length === 10) {
+                config.data.labels.shift();
+                config.data.datasets[0].data.shift();
+            }
+            config.data.labels.push(data.time);
+            config.data.datasets[0].data.push(data.value);
+            config.data.datasets[0].label='Heart Rate    Current Heart rate: '+data.va ;
+            lineChart.update();
+        }
+    });
+
+
+
+    $(document).ready(function () {
+        const hrConfig = {lineColor:'blue'};
+
+        let config = {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: "Heart Rate",
+                    backgroundColor: hrConfig.lineColor,
+                    borderColor: hrConfig.lineColor,
+                    data: [],
+                    fill: false,
+                }],
+            },
+            options: {
+                responsive: true,
+                title: {
+                    display: true,
+                    text: 'Heart Rate'
+                },
+                tooltips: {
+                    mode: 'index',
+                    intersect: false,
+                },
+                hover: {
+                    mode: 'nearest',
+                    intersect: false
+                },
+                scales: {
+                    xAxes: [{
+                        display: true,
+                        scaleLabel: {
+                            display: true,
+                            labelString: 'Time'
+                        }
+                    }],
+                    yAxes: [{
+                        display: true,
+                        scaleLabel: {
+                            display: true,
+                            labelString: 'Value'
+                        }
+                    }]
+                }
+            }
+        };
+
+        const context = document.getElementById('canvas3').getContext('2d');
+
+        const lineChart = new Chart(context, config);
+
+        const source = new EventSource("/chart-data");
+
+        source.onmessage = function (event) {
+            const data = JSON.parse(event.data);
+            if (config.data.labels.length === 10) {
+                config.data.labels.shift();
+                config.data.datasets[0].data.shift();
+            }
+            config.data.labels.push(data.time);
+            config.data.datasets[0].data.push(data.value);
+            config.data.datasets[0].label='Heart Rate    Current Heart rate: '+data.va ;
+            lineChart.update();
+        }
+    });
+
+
+
+    $(document).ready(function () {
+        const hrConfig = {lineColor:'green'};
+
+        let config = {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: "Heart Rate",
+                    backgroundColor: hrConfig.lineColor,
+                    borderColor: hrConfig.lineColor,
+                    data: [],
+                    fill: false,
+                }],
+            },
+            options: {
+                responsive: true,
+                title: {
+                    display: true,
+                    text: 'Heart Rate'
+                },
+                tooltips: {
+                    mode: 'index',
+                    intersect: false,
+                },
+                hover: {
+                    mode: 'nearest',
+                    intersect: false
+                },
+                scales: {
+                    xAxes: [{
+                        display: true,
+                        scaleLabel: {
+                            display: true,
+                            labelString: 'Time'
+                        }
+                    }],
+                    yAxes: [{
+                        display: true,
+                        scaleLabel: {
+                            display: true,
+                            labelString: 'Value'
+                        }
+                    }]
+                }
+            }
+        };
+
+        const context = document.getElementById('canvas4').getContext('2d');
+
+        const lineChart = new Chart(context, config);
+
+        const source = new EventSource("/chart-data");
+
+        source.onmessage = function (event) {
+            const data = JSON.parse(event.data);
+            if (config.data.labels.length === 10) {
+                config.data.labels.shift();
+                config.data.datasets[0].data.shift();
+            }
+            config.data.labels.push(data.time);
+            config.data.datasets[0].data.push(data.value);
+            config.data.datasets[0].label='Heart Rate    Current Heart rate: '+data.va ;
             lineChart.update();
         }
     });
 </script>
+
 </body>
 </html>

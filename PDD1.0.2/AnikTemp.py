@@ -2,6 +2,9 @@ import sys
 sys.path.append('../')
 import time
 import os
+import json
+import datetime
+
 from DFRobot_ADS1115 import ADS1115
 ADS1115_REG_CONFIG_PGA_6_144V        = 0x00 # 6.144V range = Gain 2/3
 ADS1115_REG_CONFIG_PGA_4_096V        = 0x02 # 4.096V range = Gain 1
@@ -37,6 +40,12 @@ new_file_path = os.path.join(path_to_script,"logs")
 while True:
     adc0 = ads1115.readVoltage(0)
     temp = (adc0['r'] - 500) / 10
+    data = {}
+    data['Time'] = str(datetime.datetime.now())
+    data['Temp'] = temp
+    json_data = json.dumps(data)
     print(temp)
-    with open(os.path.join(new_file_path, 'templog.txt'), 'a') as f:
-        f.write("Temp: "+ str(temp)+"\n")
+    with open(os.path.join(new_file_path, 'templog.json'), 'a') as f:
+        json.dump(data,f)
+        f.write("\n")
+        # f.write("Temp: "+ str(temp)+"\n")

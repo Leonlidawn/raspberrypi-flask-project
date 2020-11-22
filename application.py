@@ -32,13 +32,14 @@ def index():
 def chart_data():
     def getJsonData():
         while True:
+            time_interval = 0.25
             data = getData()
             print ("data:{}\n\n".format(data))
             json_data = json.dumps(
                 # change this to read from file
                 {'time': datetime.now().strftime('%H:%M:%S'), 'value': data['hr']})
             yield ("data:{}\n\n".format(json_data))
-            time.sleep(1)
+            time.sleep(time_interval)
 
     return Response(getJsonData(), mimetype='text/event-stream')
 

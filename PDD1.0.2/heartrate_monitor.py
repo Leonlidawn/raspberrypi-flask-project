@@ -5,6 +5,8 @@ import threading
 import time
 import numpy as np
 import os
+import json
+import datetime
 
 class HeartRateMonitor(object):
     """
@@ -68,8 +70,16 @@ class HeartRateMonitor(object):
                         if self.print_result:
                             print("BPM: {0}, SpO2: {1}".format(self.bpm, spo2))
                             if not ((spo2 == -999) or (np.mean(ir_data) < 50000 and np.mean(red_data) < 50000)):
-                                with open(os.path.join(new_file_path, 'spo2log.txt'), 'a') as f:
-                                    f.write("SPO2: "+ str(spo2) +"\n")
+                                data = {}
+                                data['Time'] = str(datetime.datetime.now())
+                                data['BPM'] = bpm
+                                data['SPO2'] = spo2
+                                json_data = json.dumps(data)
+                                with open(os.path.join(new_file_path, 'spo2log.json'), 'a') as f:
+                                    json.dump(data,f)
+                                    f.write("\n")
+                                    # json.dump("\n",f)
+                                    #f.write("SPO2: "+ str(spo2) +"\n")
                 
             time.sleep(self.LOOP_TIME)
 
