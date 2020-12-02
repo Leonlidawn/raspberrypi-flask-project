@@ -1,98 +1,419 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <title>Patiant Distress Monitor</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.min.css" rel="stylesheet">
+    <style>
+        body {
+            --border-color: rgb(255, 215, 103);
+
+            background-color: black;
+        }
+
+        h1 {
+            color: blue;
+        }
+
+        p {
+            color: red;
+        }
+
+        /*  */
+        .top-bar div {
+            border: 1px solid var(--border-color);
+            color: white;
+        }
+
+      
+        .bordered {
+            border: 1px solid var(--border-color);
+        }
+        canvas{
+            height:15vh;
+        }
+        .data-cell{
+            height: 15vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        #hb-data{
+            color:greenyellow;
+        }
+
+        .warning-hight{
+            color:red;
+            font-weight: bold;
+            animation: warning 1.5s linear infinite;
+        }
+
+        .warning-low{
+            color:rgb(255, 196, 0);
+            font-weight: bold;
+        }
+
+        @keyframes warning  {
+            0%{
+                opacity: 0.5;
+            }
+            50%{
+                opacity: 1;
+            }
+            100%{
+                opacity: 0.5;
+            }
+        }
+
+    </style>
 </head>
+
 <body>
-<div class="container">
-    <div class="row">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-body">
-                    <canvas id="canvas"></canvas>
-                </div>
-            </div>
+    <!------------------ top bar---------------- -->
+    <div class="row top-bar">
+        <div class="col-4">
+            <span>patient id:</span>
+            <span id="patient"></span>
+        </div>
+
+        <div class="col-4">
+            <span id="time"></span>
+        </div>
+
+        <div class="col-4">
+            <span class="" id="warning">stress indication: none</span>
         </div>
     </div>
-</div>
-<!--suppress JSUnresolvedLibraryURL -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.0/jquery.min.js"></script>
-<!--suppress JSUnresolvedLibraryURL -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/js/bootstrap.min.js"></script>
-<!--suppress JSUnresolvedLibraryURL -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.min.js"></script>
+
+    <div class="row">
+        <div class="col-8">
+            <div class=" chart-container" >
+                <canvas id="hb-chart"></canvas>
+            </div>
+        </div>
+            <div id="hb-data" class=" col-4 bordered data-cell">
+                -
+            </div>
+    </div>
+
+    <div class="row">
+        <div class="col-8">
+                <div class="chart-container">
+                    <canvas id="spo2-chart"></canvas>
+                </div>
+        </div>
+        <div id="spo2-data" class=" col-4 bordered data-cell">
+
+        </div>
+    </div>
 
 
-<script>
-    $(document).ready(function () {
-        const hrConfig = {lineColor:'red'};
-        
+    <div class="row">
+        <!-- heart chart -->
+        <div class="col-8">
+            <!-- logs -->
+        </div>
+        <!-- hear -->
+        <div class="col-4">
+            <div id="temp-data" class="bordered">
+            </div>
+            <div id="sr-data" class="bordered">
+            </div>
+            <div id="accel-data" class="bordered">
+            </div>
+        </div>
 
-        const config = {
-            type: 'line',
-            data: {
-                labels: [],
-                datasets: [{
-                    label: "Heart Rate",
-                    backgroundColor: hrConfig.lineColor,
-                    borderColor: hrConfig.lineColor,
-                    data: [],
-                    fill: false,
-                }],
-            },
-            options: {
-                responsive: true,
-                title: {
-                    display: true,
-                    text: 'Realtime Patient Status'
+    </div>
+
+
+    <!--suppress JSUnresolvedLibraryURL -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.0/jquery.min.js"></script>
+    <!--suppress JSUnresolvedLibraryURL -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/js/bootstrap.min.js"></script>
+    <!--suppress JSUnresolvedLibraryURL -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.min.js"></script>
+
+
+    <script>
+        // ====patient=====
+        var warningString = '-';
+        var warningClass = '';
+
+        $( document ).ready(function(){
+            //Perform Ajax request.
+            $.ajax({
+                url: 'patient',
+                type: 'get',
+                success: function(data){
+                    console.log( data.name ); // John
+                    document.getElementById('patient').innerText=data.name;
                 },
-                tooltips: {
-                    mode: 'index',
-                    intersect: false,
-                },
-                hover: {
-                    mode: 'nearest',
-                    intersect: false
-                },
-                scales: {
-                    xAxes: [{
-                        display: true,
-                        scaleLabel: {
-                            display: true,
-                            labelString: 'Time'
-                        }
+                error: function (xhr, ajaxOptions, thrownError) {
+                    var errorMsg = 'Ajax request failed: ' + xhr.responseText;
+                    $('#content').html(errorMsg);
+                  }
+            });
+        });
+
+        // ====current time=====
+        $( document ).ready(function(){
+            //Perform Ajax request.
+            setInterval(
+            function(){
+                var dt = new Date();
+            sec =  dt.getSeconds()
+            if(sec < 10){
+                sec = '0'+sec;
+            }
+            var time = dt.getHours() + ":" + dt.getMinutes() + ":" + sec;
+            document.getElementById('time').innerText=time;
+            },1000
+            )
+        });
+
+        //=========== "Heart Rate" ===========
+        $(document).ready(function () {
+            const hrConfig = { lineColor: 'red' };
+
+            let config = {
+                type: 'line',
+                data: {
+                    pointRadius: 0,
+                    labels: [],
+                    datasets: [{
+                        label: "Heart Rate",
+                        backgroundColor: hrConfig.lineColor,
+                        borderColor: hrConfig.lineColor,
+                        data: [],
+                        fill: false,
                     }],
-                    yAxes: [{
-                        display: true,
-                        scaleLabel: {
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio:false,
+                    title: {
+                        display: false,
+                        text: 'Heart Rate'
+                    },
+                    tooltips: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    hover: {
+                        mode: 'nearest',
+                        intersect: false
+                    },
+                    scales: {
+                        xAxes: [{
                             display: true,
-                            labelString: 'Value'
-                        }
-                    }]
+                            scaleLabel: {
+                                display: false,
+                                labelString: 'Time'
+                            }
+                        }],
+                        yAxes: [{
+                            display: true,
+                            scaleLabel: {
+                                display: false,
+                                labelString: 'Value'
+                            }
+                        }]
+                    }
                 }
+            };
+
+            const context = document.getElementById('hb-chart').getContext('2d');
+
+            const lineChart = new Chart(context, config);
+
+            const source = new EventSource("/chart-data/hb");
+
+            const currentHb = document.getElementById('hb-data');
+            currentHb.innerText = "asf";
+
+            source.onmessage = function (event) {
+                const data = JSON.parse(event.data);
+                console.log(data);
+                if (config.data.labels.length === 200) {
+                    config.data.labels.shift();
+                    config.data.datasets[0].data.shift();
+                }
+                config.data.labels.push(data.time);
+                config.data.datasets[0].data.push(data.value);
+                config.data.datasets[0].label = 'Heart Rate : ' + data.value;
+                console.log()
+                lineChart.update();                
+                
             }
-        };
+        });
 
-        const context = document.getElementById('canvas').getContext('2d');
+        //=========== "spo2" ===========
+        $(document).ready(function () {
+            const hrConfig = { lineColor: '#bf00ff' };
 
-        const lineChart = new Chart(context, config);
+            let config = {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: "SPO2 Rate",
+                        backgroundColor: hrConfig.lineColor,
+                        borderColor: hrConfig.lineColor,
+                        data: [],
+                        fill: false,
+                    }],
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio:false,
+                    title: {
+                        display: false,
+                        text: 'Heart Rate'
+                    },
+                    tooltips: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    hover: {
+                        mode: 'nearest',
+                        intersect: false
+                    },
+                    scales: {
+                        xAxes: [{
+                            display: true,
+                            scaleLabel: {
+                                display: false,
+                                labelString: 'Time'
+                            }
+                        }],
+                        yAxes: [{
+                            display: true,
+                            scaleLabel: {
+                                display: false,
+                                labelString: 'Value'
+                            }
+                        }]
+                    }
+                }
+            };
 
-        const source = new EventSource("/chart-data");
+            const context = document.getElementById('spo2-chart').getContext('2d');
 
-        source.onmessage = function (event) {
-            const data = JSON.parse(event.data);
-            if (config.data.labels.length === 20) {
-                config.data.labels.shift();
-                config.data.datasets[0].data.shift();
+            const lineChart = new Chart(context, config);
+
+            const source = new EventSource("/chart-data/spo2");
+
+            source.onmessage = function (event) {
+                const data = JSON.parse(event.data);
+                if (config.data.labels.length === 10) {
+                    config.data.labels.shift();
+                    config.data.datasets[0].data.shift();
+                }
+                config.data.labels.push(data.time);
+                config.data.datasets[0].data.push(data.value);
+                config.data.datasets[0].label = 'Heart Rate    Current Heart rate: ' + data.va;
+                lineChart.update();
             }
-            config.data.labels.push(data.time);
-            config.data.datasets[0].data.push(data.value);
-            lineChart.update();
-        }
-    });
-</script>
+        });
+
+
+        // //=========== "temp" ===========
+        // $(document).ready(function () {
+
+        //     const context = document.getElementById('canvas3').getContext('2d');
+
+        //     const lineChart = new Chart(context, config);
+
+        //     const source = new EventSource("/chart-data");
+
+        //     source.onmessage = function (event) {
+        //         const data = JSON.parse(event.data);
+        //         if (config.data.labels.length === 10) {
+        //             config.data.labels.shift();
+        //             config.data.datasets[0].data.shift();
+        //         }
+        //         config.data.labels.push(data.time);
+        //         config.data.datasets[0].data.push(data.value);
+        //         config.data.datasets[0].label = 'Heart Rate    Current Heart rate: ' + data.va;
+        //         lineChart.update();
+        //     }
+        // });
+
+
+        // //=========== "sr" ===========
+
+        // $(document).ready(function () {
+        //     const hrConfig = { lineColor: 'green' };
+
+        //     let config = {
+        //         type: 'line',
+        //         data: {
+        //             labels: [],
+        //             datasets: [{
+        //                 label: "Heart Rate",
+        //                 backgroundColor: hrConfig.lineColor,
+        //                 borderColor: hrConfig.lineColor,
+        //                 data: [],
+        //                 fill: false,
+        //             }],
+        //         },
+        //         options: {
+        //             responsive: true,
+        //             title: {
+        //                 display: true,
+        //                 text: 'Heart Rate'
+        //             },
+        //             tooltips: {
+        //                 mode: 'index',
+        //                 intersect: false,
+        //             },
+        //             hover: {
+        //                 mode: 'nearest',
+        //                 intersect: false
+        //             },
+        //             scales: {
+        //                 xAxes: [{
+        //                     display: true,
+        //                     scaleLabel: {
+        //                         display: true,
+        //                         labelString: 'Time'
+        //                     }
+        //                 }],
+        //                 yAxes: [{
+        //                     display: true,
+        //                     scaleLabel: {
+        //                         display: true,
+        //                         labelString: 'Value'
+        //                     }
+        //                 }]
+        //             }
+        //         }
+        //     };
+
+        //     const context = document.getElementById('canvas4').getContext('2d');
+
+        //     const lineChart = new Chart(context, config);
+
+        //     const source = new EventSource("/chart-data");
+
+        //     source.onmessage = function (event) {
+        //         const data = JSON.parse(event.data);
+        //         if (config.data.labels.length === 10) {
+        //             config.data.labels.shift();
+        //             config.data.datasets[0].data.shift();
+        //         }
+        //         config.data.labels.push(data.time);
+        //         config.data.datasets[0].data.push(data.value);
+        //         config.data.datasets[0].label = 'Heart Rate    Current Heart rate: ' + data.va;
+        //         lineChart.update();
+        //     }
+        // });
+
+    </script>
+
 </body>
+
 </html>
