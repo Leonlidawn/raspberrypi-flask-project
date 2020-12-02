@@ -8,7 +8,7 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.min.css" rel="stylesheet">
     <style>
         body {
-            --border-color: rgb(255, 215, 103);
+            --border-color: rgb(192, 164, 88);
 
             background-color: black;
         }
@@ -27,47 +27,61 @@
             color: white;
         }
 
-      
+
         .bordered {
             border: 1px solid var(--border-color);
         }
-        canvas{
-            height:15vh;
+
+        canvas {
+            height: 15vh;
         }
-        .data-cell{
+
+        .data-cell {
             height: 15vh;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: bold;
+            border-top-width: 2px;
+            border-bottom: none;
+            width: 100%;
         }
-        #hb-data{
-            color:greenyellow;
+        .data-col{
+            display: flex;
+            flex-direction: column;
+            background-color: red;
+        }
+        #hb-data {
+            color: greenyellow;
         }
 
-        .warning-hight{
-            color:red;
+        #spo2-data{
+            color:#2ac2f5;
+        }
+        .warning-hight {
+            color: red;
             font-weight: bold;
             animation: warning 1.5s linear infinite;
         }
 
-        .warning-low{
-            color:rgb(255, 196, 0);
+        .warning-low {
+            color: rgb(255, 196, 0);
             font-weight: bold;
         }
 
-        @keyframes warning  {
-            0%{
+        @keyframes warning {
+            0% {
                 opacity: 0.5;
             }
-            50%{
+
+            50% {
                 opacity: 1;
             }
-            100%{
+
+            100% {
                 opacity: 0.5;
             }
         }
-
     </style>
 </head>
 
@@ -88,47 +102,42 @@
         </div>
     </div>
 
+    <!------------------ graph row hb---------------- -->
     <div class="row">
-        <div class="col-8">
-            <div class=" chart-container" >
+            <div class=" col-8 chart-container bordered">
                 <canvas id="hb-chart"></canvas>
             </div>
+        <div id="hb-data" class=" col-4 data-cell">
+            -
         </div>
-            <div id="hb-data" class=" col-4 bordered data-cell">
-                -
+    </div>
+
+    <!------------------ graph row spo2---------------- -->
+    <div class="row">
+        <div class=" col-8 chart-container bordered">
+                <canvas id="spo2-chart"></canvas>
             </div>
-    </div>
-
-    <div class="row">
-        <div class="col-8">
-                <div class="chart-container">
-                    <canvas id="spo2-chart"></canvas>
-                </div>
-        </div>
         <div id="spo2-data" class=" col-4 bordered data-cell">
-
+            -
         </div>
     </div>
 
 
+     <!-- lower chart -->
     <div class="row">
-        <!-- heart chart -->
-        <div class="col-8">
+        <div class="col-8 logs-col bordered">
             <!-- logs -->
         </div>
-        <!-- hear -->
-        <div class="col-4">
-            <div id="temp-data" class="bordered">
+        <div class="col-4 data-col">
+            <div id="temp-data" class="bordered data-cell">
             </div>
-            <div id="sr-data" class="bordered">
+            <div id="sr-data" class="bordered data-cell">
             </div>
-            <div id="accel-data" class="bordered">
+            <div id="accel-data" class="bordered data-cell">
             </div>
         </div>
 
     </div>
-
-
     <!--suppress JSUnresolvedLibraryURL -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.0/jquery.min.js"></script>
     <!--suppress JSUnresolvedLibraryURL -->
@@ -136,47 +145,46 @@
     <!--suppress JSUnresolvedLibraryURL -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.min.js"></script>
 
-
     <script>
         // ====patient=====
         var warningString = '-';
         var warningClass = '';
 
-        $( document ).ready(function(){
+        $(document).ready(function () {
             //Perform Ajax request.
             $.ajax({
                 url: 'patient',
                 type: 'get',
-                success: function(data){
-                    console.log( data.name ); // John
-                    document.getElementById('patient').innerText=data.name;
+                success: function (data) {
+                    console.log(data.name); // John
+                    document.getElementById('patient').innerText = data.name;
                 },
                 error: function (xhr, ajaxOptions, thrownError) {
                     var errorMsg = 'Ajax request failed: ' + xhr.responseText;
                     $('#content').html(errorMsg);
-                  }
+                }
             });
         });
 
         // ====current time=====
-        $( document ).ready(function(){
+        $(document).ready(function () {
             //Perform Ajax request.
             setInterval(
-            function(){
-                var dt = new Date();
-            sec =  dt.getSeconds()
-            if(sec < 10){
-                sec = '0'+sec;
-            }
-            var time = dt.getHours() + ":" + dt.getMinutes() + ":" + sec;
-            document.getElementById('time').innerText=time;
-            },1000
+                function () {
+                    var dt = new Date();
+                    sec = dt.getSeconds()
+                    if (sec < 10) {
+                        sec = '0' + sec;
+                    }
+                    var time = dt.getHours() + ":" + dt.getMinutes() + ":" + sec;
+                    document.getElementById('time').innerText = time;
+                }, 1000
             )
         });
 
         //=========== "Heart Rate" ===========
         $(document).ready(function () {
-            const hrConfig = { lineColor: 'red' };
+            const hrConfig = { lineColor: 'greenyellow' };
 
             let config = {
                 type: 'line',
@@ -193,25 +201,28 @@
                 },
                 options: {
                     responsive: true,
-                    maintainAspectRatio:false,
+                    maintainAspectRatio: false,
                     title: {
                         display: false,
                         text: 'Heart Rate'
                     },
-                    tooltips: {
-                        mode: 'index',
-                        intersect: false,
-                    },
+                    // tooltips: {
+                    //     mode: 'index',
+                    //     intersect: false,
+                    // },
                     hover: {
                         mode: 'nearest',
                         intersect: false
                     },
                     scales: {
                         xAxes: [{
-                            display: true,
+                            display: false,
                             scaleLabel: {
                                 display: false,
                                 labelString: 'Time'
+                            },
+                            ticks: {
+                                autoSkip: false
                             }
                         }],
                         yAxes: [{
@@ -221,61 +232,71 @@
                                 labelString: 'Value'
                             }
                         }]
+                    },
+                    animation: {
+                        onComplete: () => {
+                            if (shiftCount) {
+                                chart.data.datasets[0].data.splice(0, shiftCount - 1);
+                                chart.data.labels.splice(0, shiftCount - 1);
+                                shiftCount = 1;
+                                chart.scales.x.options.min = chart.data.labels[1];
+                                chart.update();
+                            }
+                        }
                     }
                 }
             };
 
             const context = document.getElementById('hb-chart').getContext('2d');
-
+            let shiftCount = 0;
             const lineChart = new Chart(context, config);
 
             const source = new EventSource("/chart-data/hb");
 
             const currentHb = document.getElementById('hb-data');
-            currentHb.innerText = "asf";
 
             source.onmessage = function (event) {
                 const data = JSON.parse(event.data);
-                console.log(data);
-                if (config.data.labels.length === 200) {
+
+                if (config.data.labels.length === 3) {
                     config.data.labels.shift();
                     config.data.datasets[0].data.shift();
                 }
                 config.data.labels.push(data.time);
                 config.data.datasets[0].data.push(data.value);
                 config.data.datasets[0].label = 'Heart Rate : ' + data.value;
-                console.log()
-                lineChart.update();                
-                
+                currentHb.innerText = data.value + ':/min';
+                shiftCount++;
+                lineChart.options.scales.xAxes.min = lineChart[shiftCount];
+                lineChart.update();
             }
         });
 
         //=========== "spo2" ===========
         $(document).ready(function () {
-            const hrConfig = { lineColor: '#bf00ff' };
+            const hrConfig = { lineColor: '#2ac2f5' };
 
             let config = {
                 type: 'line',
                 data: {
                     labels: [],
                     datasets: [{
-                        label: "SPO2 Rate",
+                        // label: "SPO2 Rate",
                         backgroundColor: hrConfig.lineColor,
                         borderColor: hrConfig.lineColor,
                         data: [],
-                        fill: false,
+                        fill: true,
                     }],
                 },
                 options: {
+                    legend: {
+                        display: false,
+                    },
                     responsive: true,
-                    maintainAspectRatio:false,
+                    maintainAspectRatio: false,
                     title: {
                         display: false,
                         text: 'Heart Rate'
-                    },
-                    tooltips: {
-                        mode: 'index',
-                        intersect: false,
                     },
                     hover: {
                         mode: 'nearest',
@@ -283,7 +304,7 @@
                     },
                     scales: {
                         xAxes: [{
-                            display: true,
+                            display: false,
                             scaleLabel: {
                                 display: false,
                                 labelString: 'Time'
@@ -305,6 +326,7 @@
             const lineChart = new Chart(context, config);
 
             const source = new EventSource("/chart-data/spo2");
+            const currentSpo2 = document.getElementById('spo2-data');
 
             source.onmessage = function (event) {
                 const data = JSON.parse(event.data);
@@ -314,7 +336,7 @@
                 }
                 config.data.labels.push(data.time);
                 config.data.datasets[0].data.push(data.value);
-                config.data.datasets[0].label = 'Heart Rate    Current Heart rate: ' + data.va;
+                currentSpo2.innerText=data.value;                
                 lineChart.update();
             }
         });

@@ -9,7 +9,7 @@ import jsonlines
 
 from datetime import datetime
 
-from flask import Flask, Response, render_template
+from flask import Flask, Response, render_template, jsonify
 
 app = Flask(__name__)
 random.seed()  # Initialize the random number generator
@@ -22,7 +22,7 @@ accelSleepTime = 0.5
 
 hblogPath = "./PDD/logs/hblog.json"
 hblogPathLineNum = 10
-hbSleepTime = 0.25
+hbSleepTime = 0.5
 
 spo2logPath = "./PDD/logs/spo2log.json"
 spo2logLineNum = 10
@@ -46,6 +46,7 @@ templogPathSleepTime = 1
 
 #==shared functions==========
 
+#TODO: we can calculate the things here
 def getLastLinesFromFile(numLines, filename):
     command = "tail -n "+str(numLines)+" "+filename
     result = runShellCommand(command).decode()
@@ -65,18 +66,33 @@ def runShellCommand(command):
     return out.stdout
 
 
-def getJsonDataLoop(path, tailLines, sleepTime):
+def getJsonDataLoop(path, tailLines, sleepTime, processFunc):
         while True:
-            json_data = json.dumps({'time': datetime.now().strftime('%H:%M:%S'), 'value': 1})
             # this is raw data, need to convert to time value
             #eg. {'time': datetime.now().strftime('%H:%M:%S'), 'value': data['hr']}
-            responseData = getLastLinesFromFile(tailLines, path)
+            dataArray = getLastLinesFromFile(tailLines, path)
+            data = processFunc(dataArray)
+            yield processFunc(dataArray)
             # print ("data:{}\n\n".format(responseData))
             time.sleep(sleepTime)
 
+
 #=======algorithm==========
+def getAvgHB(array):
+    total = 0
+    for record in array:
+        total = total + record['BPM']
+    avg = total/len(array)
+    json_data = json.dumps({'time': datetime.now().strftime('%H:%M:%S'), 'value': avg})
+    return "data:{}\n\n".format(json_data)
 
-
+def getAvSpo2(array):
+    total = 0
+    for record in array:
+        total = total + record['SPO2']
+    avg = int(total/len(array))
+    json_data = json.dumps({'time': datetime.now().strftime('%H:%M:%S'), 'value': avg})
+    return "data:{}\n\n".format(json_data)
 
 #======routes===========
 @app.route('/')
@@ -99,13 +115,13 @@ def chart_data1():
 @app.route('/chart-data/hb')
 def chart_data2():
     def getData():
-        getJsonDataLoop(hblogPath, hblogPathLineNum, hbSleepTime)
+        return getJsonDataLoop(hblogPath, hblogPathLineNum, hbSleepTime, getAvgHB)
     return Response(getData(), mimetype='text/event-stream')
 
 @app.route('/chart-data/spo2')
 def chart_data3():
     def getData():
-        getJsonDataLoop(spo2logPath, spo2logLineNum, spo2SleepTime)
+        return getJsonDataLoop(spo2logPath, spo2logLineNum, spo2SleepTime, getAvSpo2)
     return Response(getData(), mimetype='text/event-stream')
 
 @app.route('/chart-data/sr')
