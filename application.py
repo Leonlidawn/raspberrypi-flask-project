@@ -15,10 +15,11 @@ app = Flask(__name__)
 random.seed()  # Initialize the random number generator
 
 #===== configs =======
-#file locations and lines to be read form tail:
+#file locations and lines to be read form tail: 
 accellogPath = "./PDD/logs/accellog.json"
-accellogLineNum = 10
-accelSleepTime = 0.5
+accellogLineNum = 30  # sensor => 20 record/sec, some delay
+accelSleepTime = 0.1
+
 
 hblogPath = "./PDD/logs/hblog.json"
 hblogPathLineNum = 10
@@ -28,7 +29,7 @@ spo2logPath = "./PDD/logs/spo2log.json"
 spo2logLineNum = 10
 spo2SleepTime = 0.5
 
-srlogPath = "./PDD/logs/srlog.json"
+srlogPath = "./PDD/logs/skinreslog.json"
 srlogPathLineNum = 10
 srlogPathSleepTime = 1
 
@@ -46,7 +47,6 @@ templogPathSleepTime = 1
 
 #==shared functions==========
 
-#TODO: we can calculate the things here
 def getLastLinesFromFile(numLines, filename):
     command = "tail -n "+str(numLines)+" "+filename
     result = runShellCommand(command).decode()
@@ -65,24 +65,43 @@ def runShellCommand(command):
         stdout=subprocess.PIPE) 
     return out.stdout
 
-
 def getJsonDataLoop(path, tailLines, sleepTime, processFunc):
-        while True:
-            # this is raw data, need to convert to time value
-            #eg. {'time': datetime.now().strftime('%H:%M:%S'), 'value': data['hr']}
-            dataArray = getLastLinesFromFile(tailLines, path)
-            data = processFunc(dataArray)
-            yield processFunc(dataArray)
-            # print ("data:{}\n\n".format(responseData))
-            time.sleep(sleepTime)
+    while True:
+        # this is raw data, need to convert to time value
+        #eg. {'time': datetime.now().strftime('%H:%M:%S'), 'value': data['hr']}
+        dataArray = getLastLinesFromFile(tailLines, path)
+        data = processFunc(dataArray)
+        yield processFunc(dataArray)
+        # print ("data:{}\n\n".format(responseData))
+        time.sleep(sleepTime)
 
 
 #=======algorithm==========
+def getAccel(array):
+    lastMag = 0
+    motion='stationary'
+    for record in array:
+        mag = record['magnitude']
+        diff = abs(mag - lastMag)
+        if (abs(mag) > 0.2 ):
+            motion = 'stationary'
+        if (abs(mag) > 2):
+            motion = 'constant motion'
+        if (mag > 7):
+            motion = 'jerked'
+        lastMag = mag
+
+    json_data = json.dumps({'value': motion})
+
+    return "data:{}\n\n".format(json_data)
+    
+
+
 def getAvgHB(array):
     total = 0
     for record in array:
         total = total + record['BPM']
-    avg = total/len(array)
+    avg = int(total/len(array))
     json_data = json.dumps({'time': datetime.now().strftime('%H:%M:%S'), 'value': avg})
     return "data:{}\n\n".format(json_data)
 
@@ -94,6 +113,23 @@ def getAvSpo2(array):
     json_data = json.dumps({'time': datetime.now().strftime('%H:%M:%S'), 'value': avg})
     return "data:{}\n\n".format(json_data)
 
+def getAvSr(array):
+    total = 0
+    for record in array:
+        total = total + record['Resistance']
+        
+    avg = int(total/len(array))
+    json_data = json.dumps({'time': datetime.now().strftime('%H:%M:%S'), 'value': avg})
+    return "data:{}\n\n".format(json_data)
+
+
+def getAvTemp(array):
+    total = 0
+    for record in array:
+        total = total + record['Temp']
+    avg = int(total/len(array))
+    json_data = json.dumps({'time': datetime.now().strftime('%H:%M:%S'), 'value': avg})
+    return "data:{}\n\n".format(json_data)
 #======routes===========
 @app.route('/')
 def index():
@@ -109,7 +145,7 @@ def patient():
 @app.route('/chart-data/accel')
 def chart_data1():
     def getData():
-        getJsonDataLoop(accellogPath, accellogLineNum, accelSleepTime)
+       return getJsonDataLoop(accellogPath, accellogLineNum, accelSleepTime, getAccel)
     return Response(getData(), mimetype='text/event-stream')
 
 @app.route('/chart-data/hb')
@@ -127,13 +163,13 @@ def chart_data3():
 @app.route('/chart-data/sr')
 def chart_data4():
     def getData():
-        getJsonDataLoop(spo2logPath, srlogPathLineNum, srlogPathSleepTime)
+        return getJsonDataLoop(srlogPath, srlogPathLineNum, srlogPathSleepTime,getAvSr)
     return Response(getData(), mimetype='text/event-stream')
 
 @app.route('/chart-data/temp')
 def chart_data5():
     def getData():
-        getJsonDataLoop(templogPath, templogPathLineNum, templogPathSleepTime)
+        return getJsonDataLoop(templogPath, templogPathLineNum, templogPathSleepTime,getAvTemp)
     return Response(getData(), mimetype='text/event-stream')
 
 

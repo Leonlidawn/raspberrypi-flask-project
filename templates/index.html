@@ -7,18 +7,13 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.min.css" rel="stylesheet">
     <style>
+        *{
+            box-sizing: border-box;
+        }
         body {
             --border-color: rgb(192, 164, 88);
-
             background-color: black;
-        }
 
-        h1 {
-            color: blue;
-        }
-
-        p {
-            color: red;
         }
 
         /*  */
@@ -26,12 +21,9 @@
             border: 1px solid var(--border-color);
             color: white;
         }
-
-
-        .bordered {
-            border: 1px solid var(--border-color);
+        .row{
+            border-bottom: 1px solid var(--border-color);
         }
-
         canvas {
             padding-top: 20px;
             padding-bottom: 10px;
@@ -41,39 +33,79 @@
         .data-cell {
             height: 15vh;
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
             font-weight: bold;
             border-top-width: 2px;
-            border-bottom: none;
-            width: 100%;
-        }
+            font-size: 150%;
+            -webkit-font-smoothing:antialiased;
 
+position: relative;
+        }
+        .data-cell .name{
+            font-size: 80%;
+            left: 10px;
+            top: 5px;
+            position: absolute;
+            color: rgba(255, 208, 0, 0.699);
+
+        }
+        .data-col .data-cell:not(:last-child){
+            border-bottom: 1px solid var(--border-color);
+        }
+        .logs-col{
+            border-right: 1px solid var(--border-color);
+
+        }
         .data-col {
             display: flex;
             flex-direction: column;
-            background-color: red;
+            color:white;
+
+        }
+
+        .chart-container{
+            border-right: 1px solid var(--border-color);
         }
 
         #hb-data {
             color: greenyellow;
         }
 
+        .lower .data-col{
+            padding: 0;
+
+        }
+
         #spo2-data {
             color: #2ac2f5;
         }
 
-        .warning-hight {
-            color: red;
+        .warning {
+            background-color: rgba(255, 0, 0, 0.493);
             font-weight: bold;
             animation: warning 1.5s linear infinite;
+            padding: 0 2px;
         }
 
-        .warning-low {
-            color: rgb(255, 196, 0);
-            font-weight: bold;
+
+        #time{
+            text-align: center;
+            display: flex;
+            justify-content: center;
         }
 
+        .button-group{
+            display: flex;
+            justify-content: flex-end;
+        }
+        .button-group button{
+            margin-left: 20px;;
+        }
+        .origin{
+            font-size: 90%;
+        }
         @keyframes warning {
             0% {
                 opacity: 0.5;
@@ -102,47 +134,76 @@
             <span id="time"></span>
         </div>
 
-        <div class="col-4">
-            <span class="" id="warning">stress indication: none</span>
+        <div class="col-4 button-group">
+          <!-- <button> new patient</button>
+          <button> start </button>
+          <button> stop </button> -->
         </div>
     </div>
 
     <!------------------ graph row hb---------------- -->
     <div class="row">
-        <div class=" col-8 chart-container bordered">
+        <div class=" col-8 chart-container">
             <canvas id="hb-chart"></canvas>
         </div>
-        <div id="hb-data" class=" col-4 data-cell">
-            -
+        <div  class="col-4 data-cell">
+            <div class="name">  heart rate (i:<span id="hb-origin" class="origin"> </span>) </div>
+            <div id="hb-data"> 
+                initializing...
+            </div>
+            <div id="hb-warning" class="warning"></div>
         </div>
     </div>
 
     <!------------------ graph row spo2---------------- -->
     <div class="row">
-        <div class=" col-8 chart-container bordered">
+        <div class=" col-8 chart-container">
             <canvas id="spo2-chart"></canvas>
         </div>
-        <div id="spo2-data" class=" col-4 bordered data-cell">
-            -
+        <div  class="col-4 data-cell spo2-data-cell">
+            <div class="name">  oxygen level (i:<span id="spo2-origin" class="origin"> </span>) </div>
+            <div id="spo2-data"> 
+                initializing...
+            </div>
+            <div id="spo2-warning" class="warning"></div>
         </div>
     </div>
 
-
     <!-- lower chart -->
-    <div class="row">
-        <div class="col-8 logs-col bordered">
+    <div class="row lower">
+        <div class="col-8 logs-col ">
             <!-- logs -->
         </div>
         <div class="col-4 data-col">
-            <div id="temp-data" class="bordered data-cell">
+
+            
+            <div class="temp-data-cell data-cell">
+                <div class="name"> temperature (i:<span id="temp-origin" class="origin"> </span>) </div>
+                <div id="temp-data"> 
+                    initializing...
+                </div>
+                <div id="temp-warning" class="warning"></div>
             </div>
-            <div id="sr-data" class="bordered data-cell">
+            <div class="sr-data-cell data-cell">
+                <div class="name">  skin resistance (i:<span id="sr-origin" class="origin"> </span>) </div>
+                <div id="sr-data"> 
+                    initializing...
+                </div>
+                <div id="sr-warning" class="warning"></div>
+
             </div>
-            <div id="accel-data" class="bordered data-cell">
+            <div class="accel-data-cell data-cell">
+                <div class="name"> motion </div>
+                <div id="accel-data"> 
+                    initializing...
+                </div>
+                <div id="accel-warning" class="warning"></div>
+
             </div>
         </div>
-
     </div>
+
+
     <!--suppress JSUnresolvedLibraryURL -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.0/jquery.min.js"></script>
     <!--suppress JSUnresolvedLibraryURL -->
@@ -151,32 +212,41 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.min.js"></script>
 
     <script>
-
-        function addData(chart, label, data) {
-            chart.data.labels.push(label);
-            chart.data.datasets.forEach((dataset) => {
-                dataset.data.push(data);
-            });
-            chart.update();
-        }
-
-        function removeData(chart) {
-            if (chart.data.datasets[0].data.length > 5) {
-                chart.data.labels.shift();
-                chart.data.datasets.forEach(dataset => {
-                    dataset.data[0] = dataset.data[1]
-                    dataset.data.splice(1, 1)
-                })
-                chart.update();
-            }
-
-        }
-
         // ====patient=====
         var warningString = '-';
         var warningClass = '';
+        //time for ini data
+        var preparing = true;
+        setTimeout(
+            ()=>{
+                preparing =false;
+            }, 4000
+        )
 
-        $(document).ready(function () {
+        $(document).ready(trackTime);
+        $(document).ready(getPatient);
+        $(document).ready(hb);
+        $(document).ready(spo2);
+        $(document).ready(accel);
+        $(document).ready(temp);
+        $(document).ready(sr);
+
+        function trackTime() {
+            //Perform Ajax request.
+            setInterval(
+                function () {
+                    var dt = new Date();
+                    sec = dt.getSeconds()
+                    if (sec < 10) {
+                        sec = '0' + sec;
+                    }
+                    var time = dt.getHours() + ":" + dt.getMinutes() + ":" + sec;
+                    document.getElementById('time').innerText = time;
+                }, 1000
+            )
+        }
+
+        function getPatient() {
             //Perform Ajax request.
             $.ajax({
                 url: 'patient',
@@ -190,26 +260,9 @@
                     $('#content').html(errorMsg);
                 }
             });
-        });
+        }
 
-        // ====current time=====
-        $(document).ready(function () {
-            //Perform Ajax request.
-            setInterval(
-                function () {
-                    var dt = new Date();
-                    sec = dt.getSeconds()
-                    if (sec < 10) {
-                        sec = '0' + sec;
-                    }
-                    var time = dt.getHours() + ":" + dt.getMinutes() + ":" + sec;
-                    document.getElementById('time').innerText = time;
-                }, 1000
-            )
-        });
-
-        //=========== "Heart Rate" ===========
-        $(document).ready(function () {
+        function hb() {
             const customConfig = { lineColor: 'greenyellow', length: 10 };
 
             let config = {
@@ -251,26 +304,18 @@
                         yAxes: [{
                             display: true,
                             ticks: {
+                                fontColor:'white',
                                 suggestedMin: 0,
-                                suggestedMax: 200
+                                suggestedMax: 200,
+                                fontColor:'white',
+                                fontSize:15
                             },
                             scaleLabel: {
                                 display: false,
                                 labelString: 'Value'
                             }
                         }]
-                    },
-                    // animation: {
-                    //     onComplete: () => {
-                    //         if (shiftCount) {
-                    //             chart.data.datasets[0].data.splice(0, shiftCount - 1);
-                    //             chart.data.labels.splice(0, shiftCount - 1);
-                    //             shiftCount = 1;
-                    //             chart.scales.x.options.min = chart.data.labels[1];
-                    //             chart.update();
-                    //         }
-                    //     }
-                    // }
+                    }
                 }
             };
 
@@ -280,35 +325,47 @@
             const source = new EventSource("/chart-data/hb");
 
             const currentHb = document.getElementById('hb-data');
+            const warning = document.getElementById('hb-warning');
+            const origin = document.getElementById('hb-origin');
 
+            let originalhb;
             source.onmessage = function (event) {
                 const data = JSON.parse(event.data);
-
-           
-                config.data.labels.push(data.time);
-                config.data.datasets[0].data.push(data.value);
-
-                if (config.data.labels.length === customConfig.length) {
-                    config.data.labels.shift();
-                    config.data.datasets[0].data[0] =  config.data.datasets[0].data[1] ;
-                    config.data.datasets[0].data.splice(1,1);
+                if(preparing){
+                    originalhb = data.value;
+                }else{
+                    origin.innerText = originalhb;
+                    let diff = data.value - originalhb;
+                    if(  diff < -40 || data.value > 100){
+                        warning.innerText = "high heart rate";
+                    }else if(diff > 40){
+                        warning.innerText = "heart rate raised > 40";
+                    }
+                    else{
+                        warning.innerText = "";
+                    }
+                    config.data.labels.push(data.time);
+                    config.data.datasets[0].data.push(data.value);
+                    if (config.data.labels.length === customConfig.length) {
+                        config.data.labels.shift();
+                        config.data.datasets[0].data[0] = config.data.datasets[0].data[1];
+                        config.data.datasets[0].data.splice(1, 1);
+                        lineChart.update();
+                    }
+                   
+                    currentHb.innerText = data.value + ' / min';
                     lineChart.update();
                 }
-                
-                currentHb.innerText = data.value + ':/min';
-                lineChart.update();
             }
-        });
+        }
 
-        //=========== "spo2" ===========
-        $(document).ready(function () {
+        function spo2() {
             const customConfig = { lineColor: '#2ac2f5', length: 10 };
             let config = {
                 type: 'line',
                 data: {
                     labels: [],
                     datasets: [{
-                        // label: "SPO2 Rate",
                         backgroundColor: customConfig.lineColor,
                         borderColor: customConfig.lineColor,
                         data: [],
@@ -321,13 +378,6 @@
                     },
                     responsive: true,
                     maintainAspectRatio: false,
-                    title: {
-                        display: false,
-                    },
-                    hover: {
-                        mode: 'nearest',
-                        intersect: false
-                    },
                     scales: {
                         xAxes: [{
                             display: false,
@@ -339,8 +389,10 @@
                         yAxes: [{
                             display: true,
                             ticks: {
+                                fontColor:'white',
                                 suggestedMin: 50,
-                                suggestedMax: 100
+                                suggestedMax: 100,
+                                fontSize:15
                             },
                             scaleLabel: {
                                 display: false,
@@ -357,25 +409,104 @@
 
             const source = new EventSource("/chart-data/spo2");
             const currentSpo2 = document.getElementById('spo2-data');
-
+            const warning = document.getElementById('spo2-warning');
+            const origin = document.getElementById('spo2-origin');
+            let origianlSpo2;
             source.onmessage = function (event) {
                 const data = JSON.parse(event.data);
                 config.data.labels.push(data.time);
                 config.data.datasets[0].data.push(data.value);
-
-                if (config.data.labels.length === customConfig.length) {
-                    config.data.labels.shift();
-                    config.data.datasets[0].data[0] =  config.data.datasets[0].data[1] ;
-                    config.data.datasets[0].data.splice(1,1);
+                if(preparing){
+                    origianlSpo2 = data.value;
+                }else{
+                    origin.innerText = origianlSpo2;
+                    if(data.value<95){
+                        warning.innerText="low oxygen level";
+                    }else{
+                        warning.innerText="";
+                    }
+                    if (config.data.labels.length === customConfig.length) {
+                        config.data.labels.shift();
+                        config.data.datasets[0].data[0] = config.data.datasets[0].data[1];
+                        config.data.datasets[0].data.splice(1, 1);
+                        lineChart.update();
+                    }
+                    currentSpo2.innerText = data.value+'%';
                     lineChart.update();
                 }
-                currentSpo2.innerText = data.value;
-                lineChart.update();
-
-                
             }
-        });
+        }
 
+        function accel() {
+            const source = new EventSource("/chart-data/accel");
+            const currentMotion = document.getElementById('accel-data');
+            const warning = document.getElementById('accel-warning');
+            timeout = null;
+            source.onmessage = function (event) {
+                const data = JSON.parse(event.data);
+                if(preparing){
+
+                }else{
+                    currentMotion.innerText = data.value;
+                    if(event.value === 'jerked'){
+                        clearTimeout(timeout);
+                        warning.innerText="patient jerked"
+                        timeout = setTimeout(
+                            function() {
+                                warning.innerText='';
+                            },2000
+                        )
+                    }else{
+                    }
+                }
+            }
+        }
+
+        function temp() {
+            const source = new EventSource("/chart-data/temp");
+            const currentTemp = document.getElementById('temp-data');
+            const warning = document.getElementById('temp-warning');
+            const origin = document.getElementById('temp-origin');
+            let originalTemp;
+            source.onmessage = function (event) {
+                const data = JSON.parse(event.data);
+                if(preparing){
+                    originalTemp = data.value;
+                }else{
+                    origin.innerHTML = originalTemp;
+                    currentTemp.innerText = data.value+'°C';
+                    if (data.value > 37.5){
+                        warning.innerText="high body temperature"
+                    }else{
+                        warning.innerText=""
+                    }
+                }
+            }
+        }
+
+        function sr() {
+            const source = new EventSource("/chart-data/sr");
+            const currentSr = document.getElementById('sr-data');
+            const warning = document.getElementById('sr-warning');
+            const origin = document.getElementById('sr-origin');
+
+            let originalSr;
+            source.onmessage = function (event) {
+                const data = JSON.parse(event.data);
+                if(preparing){
+                    originalSr = data.value;
+                }else{
+                    origin.innerText=originalSr;
+                    const diff = originalSr - data.value; 
+                    if(diff > 500){
+                        warning.innerText="sweating";
+                    }else{
+                        warning.innerText="";
+                    }
+                    currentSr.innerText = data.value+' mΩ';
+                }
+            }
+        }
 
         // //=========== "temp" ===========
         // $(document).ready(function () {
